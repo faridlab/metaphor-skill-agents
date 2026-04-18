@@ -4,6 +4,32 @@ Bundled Claude Code **skills** and **subagents**, installable into any project w
 
 Ships as a Metaphor CLI plugin (`metaphor agent ...`) or a standalone binary (`metaphor-agent ...`).
 
+## Quick install
+
+```bash
+# 1. Install the plugin binary (downloads from GitHub releases → ~/.metaphor/bin/)
+metaphor plugin add metaphor-agent@latest
+
+# 2. Go into any project
+cd /path/to/your-project
+
+# 3. (optional) bootstrap .claude/ scaffolding
+metaphor agent init
+
+# 4. Install skills/agents
+metaphor agent list                                      # browse what's available
+metaphor agent install --all                             # everything (38 skills + 8 agents)
+metaphor agent install --category generic                # only portable skills
+metaphor agent install --category community              # the addyosmani/agent-skills set
+metaphor agent install commit-generator code-reviewer    # pick specific ones
+
+# Install into ~/.claude/ (available in every project, not just this one)
+metaphor agent install --all --global
+```
+
+Also available: `metaphor agent info <name>`, `metaphor agent update`, `metaphor agent remove <name>`.
+The `skill` alias works too: `metaphor agent skill commit-generator`.
+
 ## What's inside
 
 - **38 skills** across three categories:
