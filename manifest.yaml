@@ -1,0 +1,109 @@
+version: 1
+plugin:
+  name: metaphor-skill-agents
+  binary: metaphor-agent
+  description: "Install Claude Code skills and subagents into any project"
+
+# Skills are Claude Code skills (SKILL.md format). Grouped by category.
+skills:
+  generic:
+    - name: commit-generator
+      summary: "Context-aware conventional commits, no signatures"
+    - name: reviewer-code-quality
+      summary: "Code review, security scan, clean-code enforcement"
+    - name: devops-automation-expert
+      summary: "CI/CD, IaC (Terraform, Ansible), automated security scanning"
+    - name: deployment-orchestrator
+      summary: "Blue-green, canary, rolling deploys across environments"
+    - name: security-deployment-specialist
+      summary: "Security scanning, secrets management, compliance"
+    - name: cloud-infrastructure-architect
+      summary: "Multi-cloud design, cost optimization, security best practices"
+    - name: tests-maintainer
+      summary: "Test strategy, QA patterns, framework-agnostic coverage"
+    - name: domain-specific-expert
+      summary: "Domain knowledge transfer and documentation"
+
+  community:
+    # Sourced from addyosmani/agent-skills (MIT). See THIRD_PARTY_NOTICES.md.
+    - name: api-and-interface-design
+      summary: "Stable API and interface design; REST/GraphQL/module boundaries"
+    - name: browser-testing-with-devtools
+      summary: "Browser-based testing workflows using DevTools"
+    - name: ci-cd-and-automation
+      summary: "CI/CD pipelines and automation patterns"
+    - name: code-review-and-quality
+      summary: "Five-dimension review: correctness, readability, architecture, security, perf"
+    - name: code-simplification
+      summary: "Reduce complexity; remove dead code; collapse abstractions"
+    - name: context-engineering
+      summary: "Designing context windows and prompts for coding agents"
+    - name: debugging-and-error-recovery
+      summary: "Root-cause analysis, reproduction, recovery"
+    - name: deprecation-and-migration
+      summary: "Safely deprecate APIs and migrate callers"
+    - name: documentation-and-adrs
+      summary: "Docs, architecture decision records, reader-first writing"
+    - name: frontend-ui-engineering
+      summary: "Frontend/UI engineering patterns and conventions"
+    - name: git-workflow-and-versioning
+      summary: "Branching, conventional commits, versioning"
+    - name: idea-refine
+      summary: "Refining a half-formed idea into a concrete plan"
+    - name: incremental-implementation
+      summary: "Ship in small verified steps rather than big-bang changes"
+    - name: performance-optimization
+      summary: "Measure-first perf improvements; algorithmic over micro-opts"
+    - name: planning-and-task-breakdown
+      summary: "Break a task into plan + steps before coding"
+    - name: security-and-hardening
+      summary: "Secure coding, input validation, hardening"
+    - name: shipping-and-launch
+      summary: "Ship-readiness, rollout plans, launch checks"
+    - name: source-driven-development
+      summary: "Work from source of truth; avoid drifting copies"
+    - name: spec-driven-development
+      summary: "Write spec before code; code follows spec"
+    - name: test-driven-development
+      summary: "Red/green/refactor TDD loop"
+    - name: using-agent-skills
+      summary: "Meta-skill: how to invoke and compose skills"
+
+  backbone:
+    - name: backbone-cli-master
+      summary: "Master 20+ Backbone CLI commands, orchestrate workflows"
+    - name: backbone-schema-maintainer
+      summary: "Backbone DSL, 20+ code generators, DDD+Clean Arch"
+    - name: framework-architect
+      summary: "System-level architecture decisions, framework evolution"
+    - name: custom-logic-specialist
+      summary: "// <<< CUSTOM pattern, regeneration-safe extensions"
+    - name: database-migration-specialist
+      summary: "PostgreSQL migrations via Backbone tooling"
+    - name: crate-maintainer
+      summary: "Shared crate versioning, Backbone crate integration"
+    - name: apps-maintainer
+      summary: "App lifecycle, module integration, health monitoring"
+    - name: creative-domain-architect
+      summary: "DDD domain modeling, ubiquitous language, reusable patterns"
+    - name: modules-orchestrator
+      summary: "Cross-module coordination, module boundaries"
+
+# Subagents are standalone .md files with frontmatter (name, description, tools, model).
+agents:
+  - name: code-reviewer
+    summary: "Independent PR/diff reviewer, flags real issues with file:line"
+  - name: test-writer
+    summary: "Generates tests matching the project's existing conventions"
+  - name: refactorer
+    summary: "Targeted refactors, behavior-preserving, small steps"
+  - name: doc-writer
+    summary: "README, API docs, and inline comments that actually help"
+  - name: perf-analyzer
+    summary: "Hot-path and allocation analysis, impact-ranked fixes"
+  - name: security-auditor
+    summary: "OWASP-style diff audit, exploit-focused findings"
+  - name: debugger
+    summary: "Root-cause failures with reproduction, proof, and verified fix"
+  - name: onboarding-explainer
+    summary: "Explain a module/service to a new engineer — outside-in"
