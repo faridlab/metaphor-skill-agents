@@ -1,0 +1,150 @@
+name: {{ module_name|title }} Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'libs/modules/{{ module_name }}/**'
+      - '.github/workflows/{{ module_name }}_tests.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'libs/modules/{{ module_name }}/**'
+      - '.github/workflows/{{ module_name }}_tests.yml'
+
+env:
+  DATABASE_URL: postgresql://root:password@localhost:5432/monorepodb
+  API_BASE_URL: http://127.0.0.1:3001
+  RUST_LOG: info
+
+jobs:
+  {{ module_name }}-integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: root
+          POSTGRES_DB: monorepodb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache Rust dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        for i in {1..30}; do
+          if pg_isready -h localhost -p 5432 -U root; then
+            echo "PostgreSQL is ready"
+            break
+          fi
+          echo "Waiting for PostgreSQL... ($i/30)"
+          sleep 2
+        done
+
+    - name: Run database migrations
+      run: |
+        cd libs/modules/{{ module_name }}
+        DATABASE_URL=$DATABASE_URL cargo run --bin backbone migration up
+
+    - name: Check code formatting
+      run: |
+        cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: |
+        cargo clippy -- -D warnings
+
+    - name: Build project
+      run: |
+        cargo check --workspace
+
+    - name: Start API server
+      run: |
+        DATABASE_URL=$DATABASE_URL cargo run -p backbone-app -- server &
+        SERVER_PID=$!
+        echo "Server PID: $SERVER_PID"
+
+        # Wait for server to be ready
+        for i in {1..30}; do
+          if curl -f $API_BASE_URL/health; then
+            echo "API server is ready"
+            break
+          fi
+          echo "Waiting for API server... ($i/30)"
+          sleep 2
+        done
+
+        # Save PID to file for cleanup
+        echo $SERVER_PID > server.pid
+
+    - name: Run {{ module_name }} integration tests
+      run: |
+        cd libs/modules/{{ module_name }}
+        cargo test --test {{ module_name }}_integration_tests
+      env:
+        DATABASE_URL: ${{ env.DATABASE_URL }}
+        API_BASE_URL: ${{ env.API_BASE_URL }}
+        TEST_RESULTS_DIR: results/${{ github.run_number }}
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: {{ module_name }}-test-results
+        path: |
+          libs/modules/{{ module_name }}/results/
+          libs/modules/{{ module_name }}/tests/results/
+
+    - name: Cleanup API server
+      if: always()
+      run: |
+        if [ -f server.pid ]; then
+          kill $(cat server.pid) || true
+          rm server.pid
+        fi
+
+    - name: Generate test coverage
+      if: matrix.rust == 'stable'
+      run: |
+        cargo install grcov
+        cargo test --test {{ module_name }}_integration_tests
+        grcov target/debug/ -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "target/*" -o coverage.lcov
+
+    - name: Upload coverage to Codecov
+      if: matrix.rust == 'stable'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.lcov
+        flags: {{ module_name }}
+        name: {{ module_name }}-coverage

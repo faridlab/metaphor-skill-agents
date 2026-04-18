@@ -1,0 +1,45 @@
+//! Test Configuration for {{ module_name|title }} Module
+//!
+//! Provides configuration management for integration tests following Backbone patterns
+
+use std::env;
+use std::path::PathBuf;
+use std::time::Duration;
+use serde::{Deserialize, Serialize};
+
+/// {{ module_name|title }} test configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {{ module_name }}TestConfig {
+    pub api_base_url: String,
+    pub database_url: String,
+    pub request_timeout: Duration,
+    pub results_dir: Option<PathBuf>,
+    pub verbose: bool,
+    pub cleanup_after_tests: bool,
+}
+
+impl {{ module_name }}TestConfig {
+    pub fn from_env() -> Self {
+        Self {
+            api_base_url: env::var("API_BASE_URL")
+                .unwrap_or_else(|_| "http://127.0.0.1:3001".to_string()),
+            database_url: env::var("DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://root:password@localhost:5432/monorepodb".to_string()),
+            request_timeout: Duration::from_secs(60),
+            results_dir: env::var("TEST_RESULTS_DIR").ok().map(PathBuf::from),
+            verbose: env::var("TEST_VERBOSE").ok().and_then(|s| s.parse().ok()).unwrap_or(false),
+            cleanup_after_tests: env::var("CLEANUP_AFTER_TESTS").ok().and_then(|s| s.parse().ok()).unwrap_or(true),
+        }
+    }
+
+    pub fn new(api_base_url: impl Into<String>, database_url: impl Into<String>) -> Self {
+        Self {
+            api_base_url: api_base_url.into(),
+            database_url: database_url.into(),
+            request_timeout: Duration::from_secs(60),
+            results_dir: None,
+            verbose: false,
+            cleanup_after_tests: true,
+        }
+    }
+}

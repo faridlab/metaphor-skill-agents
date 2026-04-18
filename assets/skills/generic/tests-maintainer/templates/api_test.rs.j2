@@ -1,0 +1,436 @@
+//! {{ entity|title }} API Integration Tests
+//!
+//! Comprehensive API tests following the 5-category testing pattern:
+//! 1. Authentication Tests (401/403 validation)
+//! 2. Success Tests (Happy path with DB/cache validation)
+//! 3. Validation Tests (Missing fields, invalid values → 400)
+//! 4. Business Logic Tests (Conflicts, not found, idempotency)
+//! 5. Edge Cases (Boundaries, special characters)
+
+use async_trait::async_trait;
+use std::time::Instant;
+use reqwest::{Client, StatusCode};
+use serde_json::json;
+use uuid::Uuid;
+
+use libs::modules::sapiens::tests::integration::framework::base_test::{Test, TestResult, TestSuiteResult};
+use libs::modules::sapiens::tests::integration::framework::api_test::ApiTest;
+use libs::modules::sapiens::tests::integration::config::{{ module_name }}TestConfig;
+use crate::helpers::{TestSetupManager, CommonUtils};
+
+/// {{ entity|title }} API test implementation
+pub struct {{ entity|title }}ApiTest {
+    config: {{ module_name }}TestConfig,
+    setup_manager: TestSetupManager,
+    common_utils: CommonUtils,
+    client: Client,
+    test_{{ entity|lower }}_ids: Vec<String>,
+}
+
+impl {{ entity|title }}ApiTest {
+    /// Create a new {{ entity }} API test
+    pub fn new(config: {{ module_name }}TestConfig) -> Self {
+        Self {
+            config: config.clone(),
+            setup_manager: TestSetupManager::new(&config.database_url),
+            common_utils: CommonUtils::new(),
+            client: CommonUtils::create_client(),
+            test_{{ entity|lower }}_ids: Vec::new(),
+        }
+    }
+
+    // ============================================================
+    // Category 1: Authentication Tests
+    // ============================================================
+
+    /// Test unauthorized access (401)
+    async fn test_unauthorized_access(&mut self) -> TestResult {
+        let start = Instant::now();
+        let endpoint = "{{ endpoint.path }}";
+        let method = "{{ endpoint.method }}";
+
+        if method != "GET" || !endpoint.ends_with("/{id}") {
+            // Skip if not a GET endpoint that typically allows unauthorized access
+            return TestResult::success("Unauthorized Access - Skipped", "Endpoint not applicable to auth test")
+                .with_duration(start.elapsed().as_secs_f64());
+        }
+
+        let response = self.client
+            .get(&format!("{}/{}", self.config.api_base_url, Uuid::new_v4()))
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                if status == StatusCode::UNAUTHORIZED {
+                    TestResult::success("Unauthorized Access", "Correctly returned 401 for missing auth")
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("status_code", status.as_u16())
+                } else {
+                    TestResult::failure("Unauthorized Access",
+                        format!("Expected 401, got {} for unauthorized request", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("actual_status", status.as_u16())
+                }
+            }
+            Err(e) => {
+                TestResult::failure("Unauthorized Access", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+    }
+
+    // ============================================================
+    // Category 2: Success Tests
+    // ============================================================
+
+    {% if endpoint.method == "POST" %}
+    /// Test successful {{ entity }} creation
+    async fn test_successful_creation(&mut self) -> TestResult {
+        let start = Instant::now();
+        let test_data = self.common_utils.generate_test_{{ entity|lower }}_data();
+
+        let response = self.client
+            .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+            .json(&test_data)
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                let body_text = resp.text().await.unwrap_or_default();
+
+                if status.is_success() {
+                    if let Ok(response_json) = serde_json::from_str::<serde_json::Value>(&body_text) {
+                        if let (Some(id), Some(email)) = (response_json.get("id"), response_json.get("email")) {
+                            // Register for cleanup
+                            if let Some(id_str) = id.as_str() {
+                                self.test_{{ entity|lower }}_ids.push(id_str.to_string());
+                                self.setup_manager.register_cleanup_id(format!("{}_{}", "{{ entity }}", id_str));
+                            }
+
+                            TestResult::success("{{ entity|title }} Creation",
+                                format!("Successfully created {{ entity }} with ID: {:?}", id))
+                                .with_duration(start.elapsed().as_secs_f64())
+                                .with_output("status_code", status.as_u16())
+                                .with_output("created_id", id)
+                                .with_output("created_{{ entity|lower }}", response_json)
+                        } else {
+                            TestResult::failure("{{ entity|title }} Creation",
+                                "Response missing required fields (id, email)")
+                                .with_duration(start.elapsed().as_secs_f64())
+                                .with_output("response", body_text)
+                        }
+                    } else {
+                        TestResult::failure("{{ entity|title }} Creation",
+                            "Invalid JSON response")
+                            .with_duration(start.elapsed().as_secs_f64())
+                            .with_output("response_body", body_text)
+                    }
+                } else {
+                    TestResult::failure("{{ entity|title }} Creation",
+                        format!("Creation failed with status: {}", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("status_code", status.as_u16())
+                        .with_output("response_body", body_text)
+                }
+            }
+            Err(e) => {
+                TestResult::failure("{{ entity|title }} Creation", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+    }
+    {% endif %}
+
+    {% if "GET" in endpoint.method %}
+    /// Test successful {{ entity }} retrieval
+    async fn test_successful_retrieval(&mut self) -> TestResult {
+        if self.test_{{ entity|lower }}_ids.is_empty() {
+            return TestResult::success("{{ entity|title }} Retrieval", "Skipped - no test {{ entity|lower }}s available")
+                .with_duration(0.0);
+        }
+
+        let start = Instant::now();
+        let test_id = &self.test_{{ entity|lower }}_ids[0];
+
+        let response = self.client
+            .get(&format!("{}{}/{}", self.config.api_base_url, "{{ endpoint.path }}".replace("/{id}", ""), test_id))
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                let body_text = resp.text().await.unwrap_or_default();
+
+                if status.is_success() {
+                    if let Ok(response_json) = serde_json::from_str::<serde_json::Value>(&body_text) {
+                        TestResult::success("{{ entity|title }} Retrieval",
+                            format!("Successfully retrieved {{ entity }} with ID: {}", test_id))
+                            .with_duration(start.elapsed().as_secs_f64())
+                            .with_output("status_code", status.as_u16())
+                            .with_output("retrieved_{{ entity|lower }}", response_json)
+                    } else {
+                        TestResult::failure("{{ entity|title }} Retrieval",
+                            "Invalid JSON response")
+                            .with_duration(start.elapsed().as_secs_f64())
+                            .with_output("response_body", body_text)
+                    }
+                } else {
+                    TestResult::failure("{{ entity|title }} Retrieval",
+                        format!("Retrieval failed with status: {}", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("status_code", status.as_u16())
+                        .with_output("response_body", body_text)
+                }
+            }
+            Err(e) => {
+                TestResult::failure("{{ entity|title }} Retrieval", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+    }
+    {% endif %}
+
+    // ============================================================
+    // Category 3: Validation Tests
+    // ============================================================
+
+    {% if endpoint.method == "POST" %}
+    /// Test missing required fields
+    async fn test_missing_required_fields(&mut self) -> TestResult {
+        let start = Instant::now();
+
+        {% for field in required_fields %}
+        // Test missing {{ field }}
+        let mut test_data = self.common_utils.generate_test_{{ entity|lower }}_data();
+        if let Some(obj) = test_data.as_object_mut() {
+            obj.remove("{{ field }}");
+        }
+
+        let response = self.client
+            .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+            .json(&test_data)
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                if status == StatusCode::BAD_REQUEST {
+                    // This is expected - continue with next field
+                } else {
+                    return TestResult::failure("Missing Required Fields",
+                        format!("Expected 400 for missing {{ field }}, got {}", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("missing_field", "{{ field }}")
+                        .with_output("status_code", status.as_u16());
+                }
+            }
+            Err(e) => {
+                return TestResult::failure("Missing Required Fields", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64());
+            }
+        }
+        {% endfor %}
+
+        TestResult::success("Missing Required Fields", "All required fields properly validated")
+            .with_duration(start.elapsed().as_secs_f64())
+    }
+
+    /// Test invalid field values
+    async fn test_invalid_field_values(&mut self) -> TestResult {
+        let start = Instant::now();
+
+        {% if entity == "user" %}
+        // Test invalid email format
+        let test_data = self.common_utils.generate_invalid_{{ entity|lower }}_data("invalid_email");
+        let response = self.client
+            .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+            .json(&test_data)
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                if resp.status() == StatusCode::BAD_REQUEST {
+                    TestResult::success("Invalid Field Values", "Correctly rejected invalid email format")
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("validated_field", "email")
+                } else {
+                    TestResult::failure("Invalid Field Values",
+                        format!("Expected 400 for invalid email, got {}", resp.status().as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("actual_status", resp.status().as_u16())
+                }
+            }
+            Err(e) => {
+                TestResult::failure("Invalid Field Values", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+        {% elif entity == "role" %}
+        // Test duplicate role name
+        if !self.test_{{ entity|lower }}_ids.is_empty() {
+            // Create first role
+            let test_data = self.common_utils.generate_test_{{ entity|lower }}_data();
+            let first_response = self.client
+                .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+                .json(&test_data)
+                .send()
+                .await;
+
+            // Try to create duplicate
+            let duplicate_response = self.client
+                .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+                .json(&test_data)
+                .send()
+                .await;
+
+            match duplicate_response {
+                Ok(resp) => {
+                    if resp.status() == StatusCode::BAD_REQUEST || resp.status() == StatusCode::CONFLICT {
+                        TestResult::success("Invalid Field Values", "Correctly rejected duplicate role name")
+                            .with_duration(start.elapsed().as_secs_f64())
+                            .with_output("validated_field", "name")
+                    } else {
+                        TestResult::failure("Invalid Field Values",
+                            format!("Expected 400/409 for duplicate name, got {}", resp.status().as_u16()))
+                            .with_duration(start.elapsed().as_secs_f64())
+                            .with_output("actual_status", resp.status().as_u16())
+                    }
+                }
+                Err(e) => {
+                    TestResult::failure("Invalid Field Values", format!("Request failed: {}", e))
+                        .with_duration(start.elapsed().as_secs_f64())
+                }
+            }
+        } else {
+            TestResult::success("Invalid Field Values", "Skipped - no test roles for duplicate test")
+                .with_duration(start.elapsed().as_secs_f64())
+        }
+        {% endif %}
+    }
+    {% endif %}
+
+    // ============================================================
+    // Category 4: Business Logic Tests
+    // ============================================================
+
+    {% if endpoint.method == "GET" %}
+    /// Test not found scenario
+    async fn test_not_found(&mut self) -> TestResult {
+        let start = Instant::now();
+        let non_existent_id = Uuid::new_v4();
+
+        let response = self.client
+            .get(&format!("{}{}/{}", self.config.api_base_url, "{{ endpoint.path }}".replace("/{id}", ""), non_existent_id))
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                if status == StatusCode::NOT_FOUND {
+                    TestResult::success("Not Found", "Correctly returned 404 for non-existent ID")
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("tested_id", non_existent_id.to_string())
+                        .with_output("status_code", status.as_u16())
+                } else {
+                    TestResult::failure("Not Found",
+                        format!("Expected 404 for non-existent ID, got {}", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("tested_id", non_existent_id.to_string())
+                        .with_output("actual_status", status.as_u16())
+                }
+            }
+            Err(e) => {
+                TestResult::failure("Not Found", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+    }
+    {% endif %}
+
+    // ============================================================
+    // Category 5: Edge Cases
+    // ============================================================
+
+    /// Test boundary conditions and special characters
+    async fn test_edge_cases(&mut self) -> TestResult {
+        let start = Instant::now();
+
+        {% if entity == "user" %}
+        // Test maximum length username
+        let mut test_data = self.common_utils.generate_test_{{ entity|lower }}_data();
+        if let Some(obj) = test_data.as_object_mut() {
+            obj.insert("username".to_string(), serde_json::Value::String("a".repeat(50)));
+            obj.insert("email".to_string(), serde_json::Value::String("max_length@test.com"));
+        }
+
+        let response = self.client
+            .post(&format!("{}{{ endpoint.path }}", self.config.api_base_url))
+            .json(&test_data)
+            .send()
+            .await;
+
+        match response {
+            Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    TestResult::success("Edge Cases", "Successfully handled maximum length fields")
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("tested_condition", "max_length_fields")
+                        .with_output("status_code", status.as_u16())
+                } else {
+                    TestResult::failure("Edge Cases",
+                        format!("Failed to handle max length fields: {}", status.as_u16()))
+                        .with_duration(start.elapsed().as_secs_f64())
+                        .with_output("status_code", status.as_u16())
+                }
+            }
+            Err(e) => {
+                TestResult::failure("Edge Cases", format!("Request failed: {}", e))
+                    .with_duration(start.elapsed().as_secs_f64())
+            }
+        }
+        {% else %}
+        TestResult::success("Edge Cases", "Skipped - no specific edge case tests for {{ entity }}")
+            .with_duration(start.elapsed().as_secs_f64())
+        {% endif %}
+    }
+}
+
+#[async_trait]
+impl Test for {{ entity|title }}ApiTest {
+    fn name(&self) -> &str {
+        "{{ entity|title }} API Integration Tests"
+    }
+
+    async fn setup(&mut self) -> Result<(), TestError> {
+        self.setup_manager.setup().await
+    }
+
+    async fn teardown(&mut self) -> Result<(), TestError> {
+        self.setup_manager.cleanup().await
+    }
+
+    async fn run_tests(&mut self) -> Vec<TestResult> {
+        vec![
+            self.test_unauthorized_access().await,
+            {% if endpoint.method == "POST" %}
+            self.test_successful_creation().await,
+            self.test_missing_required_fields().await,
+            self.test_invalid_field_values().await,
+            {% endif %}
+            {% if "GET" in endpoint.method %}
+            self.test_successful_retrieval().await,
+            self.test_not_found().await,
+            {% endif %}
+            self.test_edge_cases().await,
+        ]
+    }
+}

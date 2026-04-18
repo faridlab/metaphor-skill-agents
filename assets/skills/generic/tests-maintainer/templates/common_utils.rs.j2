@@ -1,0 +1,187 @@
+//! Common utilities for {{ module_name|title }} module integration tests
+//!
+//! Provides assertion helpers, test data creation, and validation utilities
+//! following Backbone Framework testing patterns.
+
+use reqwest::{Client, StatusCode};
+use serde_json::Value;
+use uuid::Uuid;
+use chrono::Utc;
+use std::collections::HashMap;
+
+use crate::framework::TestError;
+
+/// Common test utilities and assertions
+pub struct CommonUtils {
+    client: Client,
+}
+
+impl CommonUtils {
+    /// Create new common utilities instance
+    pub fn new() -> Self {
+        Self {
+            client: Client::new(),
+        }
+    }
+
+    /// Create HTTP client with default headers
+    pub fn create_client() -> Client {
+        Client::builder()
+            .timeout(std::time::Duration::from_secs(60))
+            .build()
+            .expect("Failed to create HTTP client")
+    }
+
+    /// Generate a unique test identifier
+    pub fn generate_test_id(prefix: &str) -> String {
+        format!("{}_{}_{}", prefix, Uuid::new_v4(), Utc::now().timestamp())
+    }
+
+    /// Generate a unique test email
+    pub fn generate_test_email(&prefix: &str) -> String {
+        format!("{}.{}@test.local", prefix, Uuid::new_v4())
+    }
+
+    /// Generate a unique test username
+    pub fn generate_test_username(&prefix: &str) -> String {
+        format!("{}_user_{}", prefix, Uuid::new_v4().to_string().replace('-', "")[..20].to_string())
+    }
+
+    {% for entity in entities %}
+    /// Generate test {{ entity }} data
+    pub fn generate_test_{{ entity }}_data(&self) -> Value {
+        json!({
+            {% if entity == "user" %}
+            "email": self.generate_test_email("testuser"),
+            "username": self.generate_test_username("testuser"),
+            "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHQ$hashedpasswordwithenoughtomakeit60charslongenough",
+            "status": "active",
+            "email_verified": false,
+            "failed_login_attempts": 0,
+            "metadata": {
+                "created_at": Utc::now().to_rfc3339(),
+                "updated_at": Utc::now().to_rfc3339(),
+                "test_data": true
+            }
+            {% elif entity == "role" %}
+            "name": format!("test_role_{}", Uuid::new_v4().to_string()[..8].to_string()),
+            "description": "Test role generated for integration testing",
+            "is_default": false,
+            "metadata": {
+                "created_at": Utc::now().to_rfc3339(),
+                "updated_at": Utc::now().to_rfc3339(),
+                "test_data": true
+            }
+            {% elif entity == "permission" %}
+            "name": format!("test_permission_{}", Uuid::new_v4().to_string()[..8].to_string()),
+            "resource": format!("test_resource_{}", Uuid::new_v4().to_string()[..8].to_string()),
+            "description": "Test permission generated for integration testing",
+            "metadata": {
+                "created_at": Utc::now().to_rfc3339(),
+                "updated_at": Utc::now().to_rfc3339(),
+                "test_data": true
+            }
+            {% else %}
+            // Generic {{ entity }} data structure
+            "metadata": {
+                "created_at": Utc::now().to_rfc3339(),
+                "updated_at": Utc::now().to_rfc3339(),
+                "test_data": true
+            }
+            {% endif %}
+        })
+    }
+
+    /// Generate invalid {{ entity }} data for validation testing
+    pub fn generate_invalid_{{ entity }}_data(&self, error_type: &str) -> Value {
+        match error_type {
+            {% if entity == "user" %}
+            "missing_email" => json!({
+                "username": self.generate_test_username("testuser"),
+                "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHQ$hashedpasswordwithenoughtomakeit60charslongenough",
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            }),
+            "invalid_email" => json!({
+                "email": "invalid-email-format",
+                "username": self.generate_test_username("testuser"),
+                "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHQ$hashedpasswordwithenoughtomakeit60charslongenough",
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            }),
+            "missing_username" => json!({
+                "email": self.generate_test_email("testuser"),
+                "password_hash": "$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHQ$hashedpasswordwithenoughtomakeit60charslongenough",
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            }),
+            {% elif entity == "role" %}
+            "missing_name" => json!({
+                "description": "Test role without name",
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            }),
+            "empty_name" => json!({
+                "name": "",
+                "description": "Test role with empty name",
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            }),
+            {% endif %}
+            _ => json!({
+                "metadata": {"created_at": Utc::now().to_rfc3339()}
+            })
+        }
+    }
+    {% endfor %}
+
+    /// Assert HTTP response status code
+    pub fn assert_status_code(&self, response: &reqwest::Response, expected: StatusCode) -> Result<(), TestError> {
+        let actual = response.status();
+        if actual != expected {
+            return Err(TestError::AssertionFailed(format!(
+                "Expected status {}, got {}", expected.as_u16(), actual.as_u16()
+            )));
+        }
+        Ok(())
+    }
+
+    /// Assert response contains specific field
+    pub fn assert_response_contains_field(&self, response: &Value, field: &str) -> Result<(), TestError> {
+        if !response.get(field).is_some() {
+            return Err(TestError::AssertionFailed(format!(
+                "Response missing field: {}", field
+            )));
+        }
+        Ok(())
+    }
+
+    /// Assert field value equals expected value
+    pub fn assert_field_equals<T>(&self, response: &Value, field: &str, expected: T) -> Result<(), TestError>
+    where
+        T: serde::Serialize,
+    {
+        let actual_value = response.get(field)
+            .ok_or_else(|| TestError::AssertionFailed(format!("Missing field: {}", field)))?;
+
+        let expected_json = serde_json::to_value(expected)
+            .map_err(|e| TestError::AssertionFailed(format!("Serialization error: {}", e)))?;
+
+        if actual_value != &expected_json {
+            return Err(TestError::AssertionFailed(format!(
+                "Field {}: expected {:?}, got {:?}", field, expected_json, actual_value
+            )));
+        }
+
+        Ok(())
+    }
+
+    /// Extract ID from response for cleanup
+    pub fn extract_id(&self, response: &Value) -> Result<String, TestError> {
+        response.get("id")
+            .and_then(|id| id.as_str())
+            .map(|id| id.to_string())
+            .ok_or_else(|| TestError::AssertionFailed("Response missing or invalid 'id' field".to_string()))
+    }
+}
+
+impl Default for CommonUtils {
+    fn default() -> Self {
+        Self::new()
+    }
+}

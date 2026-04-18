@@ -1,0 +1,284 @@
+//! Base Test Framework for {{ module_name|title }} Module
+//!
+//! Implements Testee framework patterns:
+//! - Template Method pattern for test lifecycle
+//! - Builder pattern for test results
+//! - Composite pattern for suite results
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use tracing::{info, error};
+use anyhow::Result;
+
+/// Test lifecycle errors
+#[derive(Debug, thiserror::Error)]
+pub enum TestError {
+    #[error("Setup failed: {0}")]
+    SetupError(String),
+
+    #[error("Teardown failed: {0}")]
+    TeardownError(String),
+
+    #[error("Execution error: {0}")]
+    ExecutionError(String),
+
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("Database error: {0}")]
+    DatabaseError(String),
+
+    #[error("API error: {0}")]
+    ApiError(String),
+}
+
+/// Individual test result container
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestResult {
+    pub test_name: String,
+    pub success: bool,
+    pub details: String,
+    pub duration_seconds: f64,
+    pub timestamp: DateTime<Utc>,
+    pub input: HashMap<String, Value>,
+    pub output: HashMap<String, Value>,
+}
+
+impl TestResult {
+    pub fn new(test_name: impl Into<String>, success: bool) -> Self {
+        Self {
+            test_name: test_name.into(),
+            success,
+            details: String::new(),
+            duration_seconds: 0.0,
+            timestamp: Utc::now(),
+            input: HashMap::new(),
+            output: HashMap::new(),
+        }
+    }
+
+    pub fn with_details(mut self, details: impl Into<String>) -> Self {
+        self.details = details.into();
+        self
+    }
+
+    pub fn with_duration(mut self, duration: f64) -> Self {
+        self.duration_seconds = duration;
+        self
+    }
+
+    pub fn with_input(mut self, key: impl Into<String>, value: impl Serialize) -> Self {
+        self.input.insert(key.into(), serde_json::to_value(value).unwrap_or(Value::Null));
+        self
+    }
+
+    pub fn with_output(mut self, key: impl Into<String>, value: impl Serialize) -> Self {
+        self.output.insert(key.into(), serde_json::to_value(value).unwrap_or(Value::Null));
+        self
+    }
+
+    pub fn status(&self) -> &str {
+        if self.success { "PASS" } else { "FAIL" }
+    }
+
+    // Factory methods for common test types
+    pub fn pass(test_name: impl Into<String>) -> Self {
+        Self::new(test_name, true)
+    }
+
+    pub fn fail(test_name: impl Into<String>) -> Self {
+        Self::new(test_name, false)
+    }
+
+    pub fn api_success(test_name: impl Into<String>, endpoint: &str, status_code: u16) -> Self {
+        Self::pass(test_name)
+            .with_details(format!("API call successful: {} {}", endpoint, status_code))
+            .with_output("status_code", status_code)
+    }
+
+    pub fn api_error(test_name: impl Into<String>, endpoint: &str, expected_status: u16, actual_status: u16) -> Self {
+        Self::fail(test_name)
+            .with_details(format!("API error: expected {}, got {} for {}", expected_status, actual_status, endpoint))
+            .with_output("expected_status", expected_status)
+            .with_output("actual_status", actual_status)
+    }
+}
+
+/// Aggregated suite results
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestSuiteResult {
+    pub suite_name: String,
+    pub start_time: DateTime<Utc>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub results: Vec<TestResult>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TestSuiteSummary {
+    pub total: usize,
+    pub passed: usize,
+    pub failed: usize,
+    pub success_rate: f64,
+}
+
+impl TestSuiteResult {
+    pub fn new(suite_name: impl Into<String>) -> Self {
+        Self {
+            suite_name: suite_name.into(),
+            start_time: Utc::now(),
+            end_time: None,
+            results: Vec::new(),
+        }
+    }
+
+    pub fn add_result(&mut self, result: TestResult) {
+        self.results.push(result);
+    }
+
+    pub fn finish(&mut self) {
+        self.end_time = Some(Utc::now());
+    }
+
+    pub fn passed_count(&self) -> usize {
+        self.results.iter().filter(|r| r.success).count()
+    }
+
+    pub fn failed_count(&self) -> usize {
+        self.results.iter().filter(|r| !r.success).count()
+    }
+
+    pub fn total_count(&self) -> usize {
+        self.results.len()
+    }
+
+    pub fn success_rate(&self) -> f64 {
+        if self.total_count() == 0 {
+            return 0.0;
+        }
+        (self.passed_count() as f64 / self.total_count() as f64) * 100.0
+    }
+
+    pub fn summary(&self) -> TestSuiteSummary {
+        TestSuiteSummary {
+            total: self.total_count(),
+            passed: self.passed_count(),
+            failed: self.failed_count(),
+            success_rate: self.success_rate(),
+        }
+    }
+}
+
+/// Abstract test trait - following Testee framework pattern
+pub trait Test {
+    /// Get the test suite name
+    fn name(&self) -> &str;
+
+    /// Get optional results directory
+    fn results_dir(&self) -> Option<&PathBuf>;
+
+    /// Setup method called before test execution
+    fn setup(&mut self) -> Result<(), TestError>;
+
+    /// Execute all test scenarios and return results
+    fn run_tests(&mut self) -> Vec<TestResult>;
+
+    /// Teardown method called after test execution
+    fn teardown(&mut self) -> Result<(), TestError>;
+
+    /// Main execution method - orchestrates the test lifecycle
+    /// Default implementation following Template Method pattern
+    fn execute(&mut self) -> TestSuiteResult {
+        let mut suite_result = TestSuiteResult::new(self.name());
+
+        info!("Starting test suite: {}", self.name());
+
+        // Setup phase
+        match self.setup() {
+            Ok(()) => info!("Setup completed successfully"),
+            Err(e) => {
+                error!("Setup failed: {}", e);
+                suite_result.add_result(
+                    TestResult::fail(format!("{}_setup_error", self.name()))
+                        .with_details(format!("Setup failed: {}", e))
+                );
+                suite_result.finish();
+                return suite_result;
+            }
+        }
+
+        // Execute tests
+        info!("Executing tests...");
+        let results = self.run_tests();
+
+        for result in results {
+            suite_result.add_result(result);
+        }
+
+        // Teardown phase (always runs)
+        info!("Running teardown...");
+        if let Err(e) = self.teardown() {
+            error!("Teardown failed: {}", e);
+        }
+
+        suite_result.finish();
+
+        // Save results if directory provided
+        if let Some(results_dir) = self.results_dir() {
+            if let Err(e) = self.save_results(&suite_result, results_dir) {
+                error!("Failed to save results: {}", e);
+            }
+        }
+
+        info!(
+            "Test suite completed: {}/{} passed ({:.1}%)",
+            suite_result.passed_count(),
+            suite_result.total_count(),
+            suite_result.success_rate()
+        );
+
+        suite_result
+    }
+
+    /// Save test results to JSON files
+    fn save_results(&self, suite_result: &TestSuiteResult, results_dir: &PathBuf) -> Result<(), TestError> {
+        std::fs::create_dir_all(results_dir)?;
+
+        // Save main results file
+        let results_file = results_dir.join(format!("{}_results.json", self.name()));
+        let json = serde_json::to_string_pretty(suite_result)
+            .map_err(|e| TestError::ExecutionError(e.to_string()))?;
+        std::fs::write(&results_file, json)?;
+
+        // Save individual test case files
+        for result in &suite_result.results {
+            let test_file_name = result.test_name
+                .replace(' ', "_")
+                .replace('-', "_")
+                .chars()
+                .filter(|c| c.is_alphanumeric() || *c == '_')
+                .collect::<String>();
+
+            let test_file = results_dir.join(format!("{}.json", test_file_name));
+            let json = serde_json::to_string_pretty(result)
+                .map_err(|e| TestError::ExecutionError(e.to_string()))?;
+            std::fs::write(&test_file, json)?;
+        }
+
+        info!("Results saved to: {:?}", results_file);
+        Ok(())
+    }
+}
+
+{% for entity in entities %}
+/// {{ entity|title }} test trait for specific entity testing
+pub trait {{ entity|title }}Test: Test {
+    fn test_{{ entity }}_authentication(&mut self) -> TestResult;
+    fn test_{{ entity }}_success(&mut self) -> TestResult;
+    fn test_{{ entity }}_validation(&mut self) -> TestResult;
+    fn test_{{ entity }}_business_logic(&mut self) -> TestResult;
+    fn test_{{ entity }}_edge_cases(&mut self) -> TestResult;
+}
+{% endfor %}

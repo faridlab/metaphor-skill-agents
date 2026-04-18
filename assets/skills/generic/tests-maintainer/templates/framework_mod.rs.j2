@@ -1,0 +1,53 @@
+//! Integration Test Framework for {{ module_name|title }} Module
+//!
+//! This module provides the framework for running comprehensive integration tests
+//! following the Backbone Framework testing patterns.
+//!
+//! Test Categories (5-Category Testing Pattern):
+//! 1. Authentication Tests (401/403 validation)
+//! 2. Success Tests (Happy path with DB/cache validation)
+//! 3. Validation Tests (Missing fields, invalid values → 400)
+//! 4. Business Logic Tests (Conflicts, not found, idempotency)
+//! 5. Edge Cases (Boundaries, special characters)
+
+pub use backbone_test_framework::{
+    Test, TestError, TestResult, TestSuiteResult, Assertions,
+};
+
+pub use super::config::{{ module_name }}TestConfig;
+
+// Re-export the existing SAPIENS framework components for consistency
+pub use libs::modules::sapiens::tests::integration::framework::{
+    base_test::{Test as BaseTest, TestError as BaseTestError, TestResult as BaseTestResult},
+    api_test::{ApiTest, ApiResponse},
+};
+
+// Export {{ module_name }}-specific test implementations
+{% for entity in entities %}
+pub mod {{ entity }}_api_test;
+{% endfor %}
+
+/// {{ module_name|title }} integration test factory
+pub struct {{ module_name|title }}TestFactory;
+
+impl {{ module_name|title }}TestFactory {
+    /// Create a new {{ entity }} API test
+    {% for entity in entities %}
+    pub fn create_{{ entity }}_api_test(
+        config: {{ module_name }}TestConfig,
+    ) -> impl Test {
+        {{ entity }}_api_test::{{ entity|title }}ApiTest::new(config)
+    }
+    {% endfor %}
+
+    /// Create all tests for the module
+    pub fn create_all_tests(
+        config: {{ module_name }}TestConfig,
+    ) -> Vec<Box<dyn Test>> {
+        vec![
+            {% for entity in entities %}
+            Box::new(Self::create_{{ entity }}_api_test(config.clone())),
+            {% endfor %}
+        ]
+    }
+}

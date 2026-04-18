@@ -1,0 +1,9 @@
+//! Test helpers for {{ module_name|title }} module integration tests
+//!
+//! Provides utilities for test setup, data management, and common operations
+
+pub mod setup_manager;
+pub mod common_utils;
+
+pub use setup_manager::TestSetupManager;
+pub use common_utils::CommonUtils;
