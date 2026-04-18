@@ -32,7 +32,8 @@ The `skill` alias works too: `metaphor agent skill commit-generator`.
 
 ## What's inside
 
-- **38 skills** across three categories:
+- **39 skills** across four categories:
+  - `metaphor/` (1) — `metaphor-cli-master`: teaches Claude to treat the `metaphor` CLI as a first-class workspace tool (commands, plugin model, `metaphor.yaml`, when to prefer it over raw `cargo`/`npm`/`docker`).
   - `generic/` (8) — portable Backbone-adjacent skills: commit-generator, reviewer-code-quality, devops-automation-expert, deployment-orchestrator, security-deployment-specialist, cloud-infrastructure-architect, tests-maintainer, domain-specific-expert
   - `backbone/` (9) — tied to the Backbone/Rust framework: backbone-cli-master, backbone-schema-maintainer, framework-architect, custom-logic-specialist, database-migration-specialist, crate-maintainer, apps-maintainer, creative-domain-architect, modules-orchestrator
   - `community/` (21) — curated production engineering skills from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT). Covers API design, TDD/spec-driven, debugging, CI/CD, security hardening, planning, docs/ADRs, and more. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

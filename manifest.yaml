@@ -24,6 +24,10 @@ skills:
     - name: domain-specific-expert
       summary: "Domain knowledge transfer and documentation"
 
+  metaphor:
+    - name: metaphor-cli-master
+      summary: "Use metaphor CLI as the first-class entry point: workspace, plugins, scaffolding, dev, deploy"
+
   community:
     # Sourced from addyosmani/agent-skills (MIT). See THIRD_PARTY_NOTICES.md.
     - name: api-and-interface-design
