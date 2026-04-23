@@ -111,3 +111,22 @@ agents:
     summary: "Root-cause failures with reproduction, proof, and verified fix"
   - name: onboarding-explainer
     summary: "Explain a module/service to a new engineer — outside-in"
+
+# CLAUDE.md templates — per-project AI-orientation files (installed at project root, not in .claude/).
+claude_md:
+  workspace:
+    - name: workspace-framework
+      summary: "Root CLAUDE.md for a framework workspace (metaphora-style, builds Metaphor itself)"
+    - name: workspace-consumer
+      summary: "Root CLAUDE.md for a consumer workspace (product using Metaphor via metaphor.lock)"
+  types:
+    - name: crate
+      summary: "Rust library crate conventions (focused single-concern)"
+    - name: backend-service
+      summary: "Axum + SQLx + Tokio runnable server, modules composition"
+    - name: module
+      summary: "DDD domain module: schema-YAML SSoT, CUSTOM markers, GenericCrudService pattern"
+    - name: cli-tool
+      summary: "Subcommand dispatcher with plugin discovery"
+    - name: mobileapp
+      summary: "Kotlin Multiplatform + Compose + Koin + offline-first sync"

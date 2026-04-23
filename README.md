@@ -30,6 +30,35 @@ metaphor agent install --all --global
 Also available: `metaphor agent info <name>`, `metaphor agent update`, `metaphor agent remove <name>`.
 The `skill` alias works too: `metaphor agent skill commit-generator`.
 
+## CLAUDE.md orientation (per project type)
+
+Skills carry depth; `CLAUDE.md` carries orientation. Install per-project-type orientation files so Claude knows what kind of project it's inside on every turn — without loading heavyweight skills first:
+
+```bash
+# From the workspace root (repo with metaphor.yaml)
+metaphor agent claude init         # writes root CLAUDE.md + one per project in metaphor.yaml
+metaphor agent claude list         # see available templates
+metaphor agent claude update       # force-reapply after template bumps
+metaphor agent claude install type-module --path ./some-module   # single-file mode
+```
+
+Two workspace templates are auto-detected from `metaphor.yaml`:
+
+- **workspace-framework** — the repo *builds* Metaphor (no `remote:` entries).
+- **workspace-consumer** — the repo *uses* Metaphor (at least one `remote:` entry, pinned via `metaphor.lock`).
+
+Five per-type templates match the `type:` field on each project:
+
+| Type | Template purpose |
+|------|------------------|
+| `crate` | Rust library crate conventions |
+| `backend-service` | Axum + SQLx + Tokio runnable server |
+| `module` | DDD domain module; schema-YAML SSoT; `// <<< CUSTOM` markers |
+| `cli-tool` | Subcommand dispatcher with plugin discovery |
+| `mobileapp` | Kotlin Multiplatform + Compose + Koin + offline-first sync |
+
+CLAUDE.md files live at the project root (not in `.claude/`). Idempotent: re-running `init` skips existing files unless you pass `--force` or use `claude update`.
+
 ## What's inside
 
 - **39 skills** across four categories:

@@ -111,7 +111,26 @@ metaphor agent info <name>
 metaphor agent update [<name>...]
 metaphor agent remove <name>...
 metaphor agent init                # bootstrap .claude/ in CWD
+metaphor agent claude list         # list CLAUDE.md templates (workspace + per-type)
+metaphor agent claude init         # write CLAUDE.md at workspace root + each project path
+metaphor agent claude update       # force-reapply CLAUDE.md templates (after template bumps)
+metaphor agent claude install <template> [--path <dir>] [--force]
 ```
+
+## Project-type orientation (CLAUDE.md)
+
+Before editing inside any Metaphor project, **read the project's `CLAUDE.md`** — it carries the type-specific rules (conventions, commands, folder layout, anti-patterns). If it's missing, install the templates:
+
+```bash
+metaphor agent claude init         # from workspace root, covers every project
+```
+
+The per-type templates cover: `crate`, `backend-service`, `module`, `cli-tool`, `mobileapp`. Two workspace-root variants exist:
+
+- **workspace-framework** — repos that *build* Metaphor (no `remote:` entries in `metaphor.yaml`).
+- **workspace-consumer** — product repos that *use* Metaphor (at least one `remote:` entry, pinned via `metaphor.lock`).
+
+Detection is automatic from `metaphor.yaml`.
 
 ## Multi-project execution
 
