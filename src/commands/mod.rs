@@ -1,3 +1,4 @@
+pub mod claude;
 pub mod info;
 pub mod init;
 pub mod install;

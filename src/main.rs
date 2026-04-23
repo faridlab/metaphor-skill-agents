@@ -7,7 +7,9 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::*;
 
-use metaphor_skill_agents::commands::{info, init, install, list, remove, update};
+use std::path::PathBuf;
+
+use metaphor_skill_agents::commands::{claude, info, init, install, list, remove, update};
 
 #[derive(Parser)]
 #[command(
@@ -53,6 +55,12 @@ enum Command {
 
     /// Create `.claude/` scaffolding (skills/, agents/, settings.json)
     Init,
+
+    /// Install per-project-type CLAUDE.md orientation files
+    Claude {
+        #[command(subcommand)]
+        action: ClaudeAction,
+    },
 }
 
 #[derive(Subcommand)]
@@ -65,6 +73,48 @@ enum AgentAction {
     Init,
     /// Alias of `install` — reads most naturally as `metaphor agent skill <name>`
     Skill(InstallArgs),
+    /// Install per-project-type CLAUDE.md orientation files
+    Claude {
+        #[command(subcommand)]
+        action: ClaudeAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum ClaudeAction {
+    /// List available CLAUDE.md templates
+    List,
+    /// Write CLAUDE.md files across the workspace (or at --path)
+    Init(ClaudeInitArgs),
+    /// Force-reapply CLAUDE.md templates (shortcut for `init --force`)
+    Update,
+    /// Install a specific template by name at CWD (or --path)
+    Install(ClaudeInstallArgs),
+}
+
+#[derive(clap::Args)]
+struct ClaudeInitArgs {
+    /// Target a single project directory (falls back to workspace-wide init)
+    #[arg(long)]
+    path: Option<PathBuf>,
+
+    /// Overwrite existing CLAUDE.md files
+    #[arg(long)]
+    force: bool,
+}
+
+#[derive(clap::Args)]
+struct ClaudeInstallArgs {
+    /// Template name (see `metaphor agent claude list`)
+    template: String,
+
+    /// Target directory (default: CWD)
+    #[arg(long)]
+    path: Option<PathBuf>,
+
+    /// Overwrite existing CLAUDE.md
+    #[arg(long)]
+    force: bool,
 }
 
 #[derive(clap::Args)]
@@ -121,6 +171,7 @@ fn main() -> Result<()> {
         Command::Remove(a) => remove::run(build_remove(a, global)),
         Command::Update(a) => update::run(build_update(a, global)),
         Command::Init => init::run(init::Options { global }),
+        Command::Claude { action } => dispatch_claude(action),
     }
 }
 
@@ -132,6 +183,24 @@ fn dispatch(action: AgentAction, global: bool) -> Result<()> {
         AgentAction::Remove(a) => remove::run(build_remove(a, global)),
         AgentAction::Update(a) => update::run(build_update(a, global)),
         AgentAction::Init => init::run(init::Options { global }),
+        AgentAction::Claude { action } => dispatch_claude(action),
+    }
+}
+
+fn dispatch_claude(action: ClaudeAction) -> Result<()> {
+    match action {
+        ClaudeAction::List => claude::run_list(),
+        ClaudeAction::Init(a) => claude::run_init(claude::Options {
+            path: a.path,
+            template: None,
+            force: a.force,
+        }),
+        ClaudeAction::Update => claude::run_update(),
+        ClaudeAction::Install(a) => claude::run_init(claude::Options {
+            path: a.path,
+            template: Some(a.template),
+            force: a.force,
+        }),
     }
 }
 
