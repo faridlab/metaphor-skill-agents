@@ -342,6 +342,39 @@ then verifies the test passes.
 
 This separation ensures the test is written without knowledge of the fix, making it more robust.
 
+## Metaphor / Backbone testing
+
+In a Backbone Framework project (Rust modules under `libs/modules/{module}/`, schema-generated code plus custom logic), apply the TDD cycle within this framework-specific test architecture.
+
+### Four-layer test strategy
+
+Test each Clean Architecture layer independently, with coverage targets reflecting how much logic each holds:
+
+| Layer | What to test | Tooling | Coverage target |
+|-------|--------------|---------|-----------------|
+| **Domain** | Entities, value objects, business rules (validation, invariants) | `#[test]` units, no I/O | 90% |
+| **Application** | Use cases / services with mocked repositories | `#[tokio::test]` + `mockall` (`MockUserRepository`) | 85% |
+| **Infrastructure** | Repositories against a real DB | `#[tokio::test]` + `testcontainers` (ephemeral Postgres) | 80% |
+| **Presentation** | HTTP/gRPC endpoints, request→response | live-service or in-process HTTP client tests | 75% |
+
+Generated code still needs tests — exclude only the generation templates themselves, not their output. Use a `TestDatabase` helper that spins up a `testcontainers` Postgres, runs `sqlx::migrate!`, and tears down per test, plus factory helpers (e.g. `UserFactory::create_valid_user()`) for fixtures. Performance-critical paths get `criterion` benches.
+
+### Five-category integration coverage
+
+For each entity's endpoints, cover all five categories — a happy-path test alone is not done:
+
+1. **Auth** — 401/403 for missing/insufficient credentials
+2. **Success** — happy path, verified against DB/cache state
+3. **Validation** — missing fields, invalid values → 400
+4. **Business logic** — conflicts, not-found, idempotency
+5. **Edge cases** — boundaries, special characters
+
+### Schema & regeneration testing
+
+Because code is generated from schema, validate the pipeline itself in CI: for every module with a `schema/` dir, run `backbone schema validate {module}`, then `backbone schema generate --target all {module}`, then `cargo check` to guarantee zero compilation errors after regeneration. Wire this into the pre-commit hook and the CI workflow alongside `cargo fmt --check`, `cargo clippy -- -D warnings`, and `cargo audit`.
+
+**Quality gate (CI):** zero compilation errors, coverage at/above the per-layer targets, no clippy warnings, no `cargo audit` vulnerabilities.
+
 ## See Also
 
 For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.

@@ -310,6 +310,50 @@ Part of code review is dependency review:
 - [ ] **Approve** — Ready to merge
 - [ ] **Request changes** — Issues must be addressed
 ```
+## Metaphor / Backbone specifics
+
+When reviewing code in a Backbone Framework project (Rust modules under `libs/modules/{module}/`, schema-generated code with custom additions), apply these framework-specific checks on top of the five axes above.
+
+### Clean Architecture data access
+
+- **Handlers access data through Service → Repository — never raw `sqlx`.** A `sqlx::query` in a handler bypasses the architecture layers. `PgPool` belongs in repository constructors, not handler `AppState`.
+- **`AppState` holds `Arc<Service>`, not `PgPool` or raw repositories.** Initialize in the route factory: `pool → Arc<Repo> → Arc<Service> → state`. Services that don't `impl Clone` must be wrapped in `Arc`.
+- **Repository primary-key awareness:** not all tables use `id` as PK (e.g. `profiles` PK is `user_id`). The generic `find_by_id` only works when the PK column is named `id`; add `find_by_{pk_column}` methods for non-standard PKs and propagate them through the service layer.
+- **JWT pattern:** middleware uses a `OnceLock<JwtService>` singleton (reads `JWT_SECRET` from env, avoids a circular state dependency); handlers use `Arc<JwtService>` from `AppState` for token generation. Both must use the same `JWT_SECRET`.
+- **DTO ↔ client alignment:** request DTOs must match exactly what the mobile/frontend client sends (check the client). Use `#[serde(rename)]` for field-name mismatches, `#[validate(...)]` on all user-facing input, and never hardcode values that should come from the request.
+
+**Backbone architecture checklist:**
+- [ ] Handlers access data through Service → Repository (never raw `sqlx`)
+- [ ] `AppState` holds `Arc<Service>`, not `PgPool` or raw repositories
+- [ ] Repository has entity-specific lookup methods for non-standard PKs
+- [ ] JWT middleware uses `OnceLock` singleton; handlers use `Arc<JwtService>` from state
+- [ ] Request DTOs match what the client actually sends
+- [ ] Route factory accepts `PgPool` and builds the `repo → service → state` chain
+
+### Regeneration-safe custom code
+
+Generated files (`*_service.rs`, `*_repository.rs`, generated `mod.rs`/`lib.rs`) are overwritten on schema regeneration. The framework's `merge_rust_mod_custom()` preserves custom blocks only when they are correctly marked. Review any custom logic for these rules:
+
+- **Marker pattern:** every custom `mod` declaration, `pub use` re-export, and `.merge()` route call inside a generated file MUST sit inside a `// <<< CUSTOM` … `// END CUSTOM` block, or it is **lost** on the next regeneration.
+- **Custom file pattern:** custom logic lives in separate `*_custom.rs` files (e.g. `provider_service_service_custom.rs`), never in generated files. Extend generated structs with `impl crate::path::to::Service { ... }` in those files.
+- **Repository getter:** custom services use the auto-generated `self.repository()` getter — never access the private `repository` field directly, and never create wrapper structs or custom traits that duplicate the repository reference.
+- **Repository extensions:** custom query methods go in `*_repository_custom.rs` as extension traits (e.g. `ProviderServiceRepositoryTemplateExt`), re-exported from `persistence/mod.rs` with a `// <<< CUSTOM` marker.
+
+**Custom-code checklist:**
+- [ ] All custom `mod` / `pub use` / `.merge()` in generated files have `// <<< CUSTOM` markers
+- [ ] Custom logic lives in `*_custom.rs` files (not in generated `*_service.rs` / `*_repository.rs`)
+- [ ] Custom services use the `self.repository()` getter (no direct field access or wrapper structs)
+- [ ] Custom repository methods use extension traits in `*_repository_custom.rs`
+- [ ] No duplicate logic between service and repository layers (pagination, limits, etc.)
+- [ ] Build passes after `backbone-schema schema generate {module} --target all --force`
+
+Verify regeneration safety before approving custom-code changes:
+
+```bash
+backbone-schema schema generate {module} --target all --force && cargo build
+# All custom blocks preserved, build passes
+```
+
 ## See Also
 
 - For detailed security review guidance, see `references/security-checklist.md`
