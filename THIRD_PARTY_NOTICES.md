@@ -7,7 +7,7 @@ This plugin bundles skill and agent content authored by others. Licenses are rep
 Source: [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (commit pinned at initial import)
 License: MIT — © 2025 Addy Osmani
 
-Skills imported verbatim:
+Skills imported verbatim (except where noted below):
 - api-and-interface-design
 - browser-testing-with-devtools
 - ci-cd-and-automation
@@ -30,6 +30,11 @@ Skills imported verbatim:
 - test-driven-development
 - using-agent-skills
 
+`code-review-and-quality` and `test-driven-development` additionally contain internal
+Metaphor/Backbone-specific sections (Clean Architecture review checks, regeneration-safe
+custom-code rules, four-layer test strategy) added by this project beyond the upstream
+source. Those additions are internal content, not from addyosmani/agent-skills.
+
 ## `assets/agents/` — merged agents
 
 Three agents in `assets/agents/` (`code-reviewer.md`, `security-auditor.md`, `test-writer.md`) were merged from the author's original drafts with content adapted from the same `addyosmani/agent-skills` repo (MIT). The merged versions combine:
@@ -38,7 +43,7 @@ Three agents in `assets/agents/` (`code-reviewer.md`, `security-auditor.md`, `te
 
 Attribution: structural and rule-level borrowings from © 2025 Addy Osmani under MIT.
 
-## `assets/skills/backbone/` and `assets/skills/generic/` — 17 skills
+## `assets/skills/backbone/` and `assets/skills/generic/` — 12 skills
 
 Source: Backbone Framework monorepo (this project's own workspace).
 License: inherit from project (treat as internal).

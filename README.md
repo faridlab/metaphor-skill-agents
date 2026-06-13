@@ -18,7 +18,7 @@ metaphor agent init
 
 # 4. Install skills/agents
 metaphor agent list                                      # browse what's available
-metaphor agent install --all                             # everything (38 skills + 8 agents)
+metaphor agent install --all                             # everything (33 skills + 8 agents)
 metaphor agent install --category generic                # only portable skills
 metaphor agent install --category community              # the addyosmani/agent-skills set
 metaphor agent install commit-generator code-reviewer    # pick specific ones
@@ -61,11 +61,11 @@ CLAUDE.md files live at the project root (not in `.claude/`). Idempotent: re-run
 
 ## What's inside
 
-- **39 skills** across four categories:
+- **34 skills** across four categories:
   - `metaphor/` (1) — `metaphor-cli-master`: teaches Claude to treat the `metaphor` CLI as a first-class workspace tool (commands, plugin model, `metaphor.yaml`, when to prefer it over raw `cargo`/`npm`/`docker`).
-  - `generic/` (8) — portable Backbone-adjacent skills: commit-generator, reviewer-code-quality, devops-automation-expert, deployment-orchestrator, security-deployment-specialist, cloud-infrastructure-architect, tests-maintainer, domain-specific-expert
+  - `generic/` (3) — portable Backbone-adjacent skills: commit-generator, cloud-infrastructure-architect, domain-specific-expert
   - `backbone/` (9) — tied to the Backbone/Rust framework: backbone-cli-master, backbone-schema-maintainer, framework-architect, custom-logic-specialist, database-migration-specialist, crate-maintainer, apps-maintainer, creative-domain-architect, modules-orchestrator
-  - `community/` (21) — curated production engineering skills from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT). Covers API design, TDD/spec-driven, debugging, CI/CD, security hardening, planning, docs/ADRs, and more. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+  - `community/` (21) — curated production engineering skills from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT). Covers API design, TDD/spec-driven, debugging, CI/CD, security hardening, planning, docs/ADRs, and more. The Backbone-specific code-review and testing guidance previously in `generic/` is folded into `code-review-and-quality` and `test-driven-development`. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **8 subagents**: code-reviewer, test-writer, refactorer, doc-writer, perf-analyzer, security-auditor, debugger, onboarding-explainer. Three of them (code-reviewer, security-auditor, test-writer) are merged versions combining the original drafts with structure from `addyosmani/agent-skills`.
 
 All assets are embedded into the binary at compile time via `include_dir!`. Installation is a simple copy — no network, no registry.

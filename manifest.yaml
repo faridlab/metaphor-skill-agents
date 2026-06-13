@@ -9,18 +9,8 @@ skills:
   generic:
     - name: commit-generator
       summary: "Context-aware conventional commits, no signatures"
-    - name: reviewer-code-quality
-      summary: "Code review, security scan, clean-code enforcement"
-    - name: devops-automation-expert
-      summary: "CI/CD, IaC (Terraform, Ansible), automated security scanning"
-    - name: deployment-orchestrator
-      summary: "Blue-green, canary, rolling deploys across environments"
-    - name: security-deployment-specialist
-      summary: "Security scanning, secrets management, compliance"
     - name: cloud-infrastructure-architect
       summary: "Multi-cloud design, cost optimization, security best practices"
-    - name: tests-maintainer
-      summary: "Test strategy, QA patterns, framework-agnostic coverage"
     - name: domain-specific-expert
       summary: "Domain knowledge transfer and documentation"
 
