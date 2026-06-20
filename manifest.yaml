@@ -9,6 +9,8 @@ skills:
   generic:
     - name: commit-generator
       summary: "Context-aware conventional commits, no signatures"
+    - name: grouped-commits
+      summary: "Split changes into focused commits grouped by functionality; one-line why-focused messages, no signatures"
     - name: cloud-infrastructure-architect
       summary: "Multi-cloud design, cost optimization, security best practices"
     - name: domain-specific-expert
@@ -17,6 +19,10 @@ skills:
   metaphor:
     - name: metaphor-cli-master
       summary: "Use metaphor CLI as the first-class entry point: workspace, plugins, scaffolding, dev, deploy"
+    - name: framework-handbook
+      summary: "Author the full framework handbook: philosophy, architecture, maintainer + developer guides, ADRs"
+    - name: business-flow-bdd
+      summary: "Document feature business flows and verify them with executable BDD/Gherkin acceptance specs"
 
   community:
     # Sourced from addyosmani/agent-skills (MIT). See THIRD_PARTY_NOTICES.md.
@@ -101,6 +107,10 @@ agents:
     summary: "Root-cause failures with reproduction, proof, and verified fix"
   - name: onboarding-explainer
     summary: "Explain a module/service to a new engineer — outside-in"
+  - name: technical-writer
+    summary: "Framework handbook author; writer + technical-manager review loop, defers READMEs to doc-writer"
+  - name: business-flow
+    summary: "Models feature business flows and turns them into runnable BDD/Gherkin acceptance specs"
 
 # CLAUDE.md templates — per-project AI-orientation files (installed at project root, not in .claude/).
 claude_md:
