@@ -5,6 +5,17 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2]
+
+### Added
+- **Four council persona files** (`council/personas/`) — `systems-interaction`, `platform-engineer`,
+  `strategist`, and the invited `domain-expert` seat. These materialize the `root`-context roster (and
+  the `domain-expert` guest invited at the root/module/service levels) that `composition.yaml` already
+  referenced, so the common "run the council at the metaphor root" path now seats from shipped persona
+  files instead of regenerating them from the schema on every run. Each follows the genotype contract in
+  `references/persona-schema.md` (lineage / lens / primary_attack / summon / engagement). Catalog totals
+  are unchanged at 38 skills and 13 subagents — these are seats within the existing `council` skill.
+
 ## [0.3.0]
 
 ### Added
