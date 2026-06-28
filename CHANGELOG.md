@@ -12,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `metaphor.toml` to resolve the repo type (cli/framework/module/service/root) and scope, then
   auto-composes a roster (standing seats + context seats + conditionally invited guests) bounded to a
   single focus lens. Runs the dissenting seats as isolated subagents and ends with the Chair's one
-  least-downside recommendation plus ranked alternatives — never a both-sides summary. Ships the
-  persona registry (`personas/*.yaml`), the roster rules (`composition.yaml`), the report contract and
-  persona schema (`references/`), and a `metaphor.toml.example`.
+  least-downside recommendation plus ranked alternatives — never a both-sides summary. Persists each
+  run's report verbatim to `docs/council/<date>-<repo-type>-<unit>-<focus>.md` so the decision and the
+  conditions it was made under survive the session. Ships the persona registry (`personas/*.yaml`), the
+  roster rules (`composition.yaml`), the report contract and persona schema (`references/`), and a
+  `metaphor.toml.example`.
 - **`council-chair`, `council-skeptic`, `council-steelman` agents** — the council's isolated
   dissenting seats: the Chair synthesizes findings into one owned call, the Skeptic hunts the
   load-bearing assumption, the Steelman builds the strongest honest case before the critique. Derived
