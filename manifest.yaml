@@ -23,6 +23,8 @@ skills:
       summary: "Author the full framework handbook: philosophy, architecture, maintainer + developer guides, ADRs"
     - name: business-flow-bdd
       summary: "Document feature business flows and verify them with executable BDD/Gherkin acceptance specs"
+    - name: council
+      summary: "Context-aware multi-persona review board: adapts its roster to the repo (cli/framework/module/service/root) and synthesizes one least-downside recommendation"
 
   community:
     # Sourced from addyosmani/agent-skills (MIT). See THIRD_PARTY_NOTICES.md.
@@ -111,6 +113,12 @@ agents:
     summary: "Framework handbook author; writer + technical-manager review loop, defers READMEs to doc-writer"
   - name: business-flow
     summary: "Models feature business flows and turns them into runnable BDD/Gherkin acceptance specs"
+  - name: council-chair
+    summary: "Council Chair: synthesizes seat findings into one least-downside recommendation; adjudicates, does not average"
+  - name: council-skeptic
+    summary: "Council Skeptic: hunts the load-bearing assumption nobody questioned"
+  - name: council-steelman
+    summary: "Council Steelman: builds the strongest honest case before the critique begins"
 
 # CLAUDE.md templates — per-project AI-orientation files (installed at project root, not in .claude/).
 claude_md:
