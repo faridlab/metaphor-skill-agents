@@ -16,6 +16,11 @@ module boundaries, and an architecture, with the key decisions recorded.
 | `documentation-and-adrs` | skill | Reader-first docs and architecture decision records | You're making a decision worth recording so future-you knows *why* | `metaphor agent install documentation-and-adrs` |
 | `framework-handbook` | skill | Authors architecture docs (C4), the "why" of tech choices | You want the architecture written up as part of the design | `metaphor agent install framework-handbook` |
 | `technical-writer` | agent | Drives `framework-handbook` to produce architecture/ADR docs | You want the design documented while it's fresh | `metaphor agent install technical-writer` |
+| `council` | skill | Multi-persona board that stress-tests an architecture/refactor and returns one least-downside call | You're weighing a structural choice, a refactor, or a new module/framework and want the trade-offs surfaced before you commit | `metaphor agent install council` |
+
+> The `council` skill pulls in the `council-chair`, `council-skeptic`, and `council-steelman` agents
+> for its isolated dissenting seats — install them alongside it. It also serves [5 · Review](5-review.md)
+> at higher altitude (judging a built unit's maturity); here it's a *design-time* sounding board.
 
 ## Recommended flow
 
@@ -27,7 +32,10 @@ module boundaries, and an architecture, with the key decisions recorded.
    `modules-orchestrator` to set module boundaries; reach for `cloud-infrastructure-architect` when
    topology/infra is in scope. Inspect the existing shape with `metaphor graph` and
    `metaphor show projects`.
-4. **Record the decisions.** Capture each significant trade-off as an ADR with
+4. **Pressure-test the big calls.** For a structural choice that's expensive to reverse, run the
+   `council` skill — it adapts a multi-persona roster to the repo type and hands back one
+   least-downside recommendation plus the alternatives, instead of a both-sides summary.
+5. **Record the decisions.** Capture each significant trade-off as an ADR with
    `documentation-and-adrs`; let the `technical-writer` agent (via `framework-handbook`) write up
    the architecture so it's documented before it drifts.
 

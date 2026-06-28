@@ -13,6 +13,8 @@ independent second opinion on correctness, quality, and risk.
 | `security-auditor` | agent | OWASP-style diff audit, exploit-focused findings | You want the diff checked for exploitable weaknesses | `metaphor agent install security-auditor` |
 | `code-simplification` | skill | Reduce complexity, remove dead code, collapse abstractions | The review surfaces accidental complexity to cut | `metaphor agent install code-simplification` |
 | `perf-analyzer` | agent | Hot-path and allocation analysis, impact-ranked fixes | The change might regress performance | `metaphor agent install perf-analyzer` |
+| `council` | skill | Multi-persona board that judges a unit's maturity/architecture/readiness and returns one least-downside call | You want a higher-altitude review than a diff — is this module/service/framework actually sound and ready? | `metaphor agent install council` |
+| `council-chair` / `council-skeptic` / `council-steelman` | agents | The council's isolated dissenting seats: Chair synthesizes, Skeptic hunts the load-bearing assumption, Steelman builds the strongest case first | You're running `council` and want each seat reasoned independently | `metaphor agent install council-chair council-skeptic council-steelman` |
 
 ## Recommended flow
 
@@ -24,6 +26,10 @@ independent second opinion on correctness, quality, and risk.
    (backed by `security-and-hardening`) for an exploit-focused look.
 4. **Cut complexity.** Apply `code-simplification` to anything the review flags as needlessly
    complex; run `perf-analyzer` if the change could regress hot paths.
+5. **Review at altitude.** When the question is bigger than a diff — is this module/service/framework
+   mature, coherent, and ready? — run the `council` skill. It reads `metaphor.toml` to compose a
+   roster fit for the repo type and returns one owned, least-downside recommendation plus the
+   alternatives, not a both-sides summary.
 
 ## Hand-off
 

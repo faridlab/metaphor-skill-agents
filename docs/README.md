@@ -14,7 +14,7 @@ maintain in production.
 ```bash
 metaphor agent install <name>            # into this project's ./.claude/
 metaphor agent install <name> --global   # into ~/.claude/ (every project)
-metaphor agent install --all             # everything (37 skills + 10 agents)
+metaphor agent install --all             # everything (38 skills + 13 agents)
 ```
 
 New to skills? Install `using-agent-skills` first — it's the meta-skill for invoking and composing
@@ -29,10 +29,10 @@ the rest.
 | Phase | Goal | Primary skills | Primary agents | Key `metaphor` commands |
 |-------|------|----------------|----------------|-------------------------|
 | [1 · Ideation](1-ideation.md) | Turn an idea into a shaped, modeled concept | `idea-refine`, `domain-specific-expert`, `creative-domain-architect`, `business-flow-bdd` | `business-flow` | `metaphor info` |
-| [2 · Planning & Design](2-planning-and-design.md) | Decide the spec, interfaces, and architecture | `planning-and-task-breakdown`, `spec-driven-development`, `api-and-interface-design`, `framework-architect`, `modules-orchestrator`, `cloud-infrastructure-architect`, `documentation-and-adrs` | `technical-writer` | `metaphor graph`, `metaphor show projects` |
+| [2 · Planning & Design](2-planning-and-design.md) | Decide the spec, interfaces, and architecture | `planning-and-task-breakdown`, `spec-driven-development`, `api-and-interface-design`, `framework-architect`, `modules-orchestrator`, `cloud-infrastructure-architect`, `documentation-and-adrs`, `council` | `technical-writer`, `council-chair`, `council-skeptic`, `council-steelman` | `metaphor graph`, `metaphor show projects` |
 | [3 · Development](3-development.md) | Build it in small, verified steps | `metaphor-cli-master`, `backbone-schema-maintainer`, `custom-logic-specialist`, `incremental-implementation`, `source-driven-development`, `test-driven-development`, `code-simplification`, `frontend-ui-engineering`, `crate-maintainer`, `apps-maintainer`, `database-migration-specialist`, `backbone-cli-master` | `refactorer` | `metaphor build`, `metaphor dev serve`, `metaphor make` |
 | [4 · Testing](4-testing.md) | Prove it works and stays fast | `test-driven-development`, `business-flow-bdd`, `browser-testing-with-devtools`, `debugging-and-error-recovery`, `performance-optimization` | `test-writer`, `business-flow`, `debugger`, `perf-analyzer` | `metaphor test --affected` |
-| [5 · Review](5-review.md) | Catch defects before merge | `code-review-and-quality`, `security-and-hardening`, `code-simplification` | `code-reviewer`, `security-auditor`, `perf-analyzer` | `metaphor lint check` |
+| [5 · Review](5-review.md) | Catch defects before merge | `code-review-and-quality`, `security-and-hardening`, `code-simplification`, `council` | `code-reviewer`, `security-auditor`, `perf-analyzer`, `council-chair`, `council-skeptic`, `council-steelman` | `metaphor lint check` |
 | [6 · Documentation](6-documentation.md) | Make it understandable to others | `framework-handbook`, `documentation-and-adrs`, `domain-specific-expert`, `business-flow-bdd` | `technical-writer`, `doc-writer`, `onboarding-explainer` | `metaphor docs generate` |
 | [7 · Deployment](7-deployment.md) | Ship it safely and repeatably | `shipping-and-launch`, `ci-cd-and-automation`, `cloud-infrastructure-architect` | — | `metaphor compose generate`, `metaphor build --all` |
 | [8 · Maintenance](8-maintenance.md) | Keep it healthy and evolving | `deprecation-and-migration`, `database-migration-specialist`, `crate-maintainer`, `apps-maintainer`, `performance-optimization`, `security-and-hardening`, `debugging-and-error-recovery` | `debugger`, `perf-analyzer`, `security-auditor`, `refactorer`, `onboarding-explainer` | `metaphor doctor`, `metaphor test --affected --base=main` |

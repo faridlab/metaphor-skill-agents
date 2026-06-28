@@ -18,7 +18,7 @@ metaphor agent init
 
 # 4. Install skills/agents
 metaphor agent list                                      # browse what's available
-metaphor agent install --all                             # everything (37 skills + 10 agents)
+metaphor agent install --all                             # everything (38 skills + 13 agents)
 metaphor agent install --category generic                # only portable skills
 metaphor agent install --category community              # the addyosmani/agent-skills set
 metaphor agent install commit-generator code-reviewer    # pick specific ones
@@ -65,15 +65,16 @@ CLAUDE.md files live at the project root (not in `.claude/`). Idempotent: re-run
 > agent onto the stages of building software (ideation → design → development → testing → review →
 > documentation → deployment → maintenance) so you can pick the right one for the goal in front of you.
 
-- **37 skills** across four categories:
-  - `metaphor/` (3) — Metaphor-workspace skills:
+- **38 skills** across four categories:
+  - `metaphor/` (4) — Metaphor-workspace skills:
     - `metaphor-cli-master`: teaches Claude to treat the `metaphor` CLI as a first-class workspace tool (commands, plugin model, `metaphor.yaml`, when to prefer it over raw `cargo`/`npm`/`docker`).
     - `framework-handbook`: author the full "big framework" documentation set — philosophy, background, technology rationale, C4 architecture, maintainer guide, app-developer guide, contribution guide, glossary, ADRs — via a writer ↔ technical-manager review loop. Paired with the `technical-writer` agent.
     - `business-flow-bdd`: model each feature's business flow and turn it into executable BDD/Gherkin acceptance specs (Given/When/Then), wired to the project's test harness. Paired with the `business-flow` agent.
+    - `council`: a context-aware, multi-persona architecture review board. Reads `metaphor.toml` to resolve the repo type (cli/framework/module/service/root) and auto-composes a roster of standing seats + context seats + invited guests, then synthesizes one least-downside recommendation. Paired with the `council-chair`, `council-skeptic`, and `council-steelman` agents.
   - `generic/` (4) — portable Backbone-adjacent skills: commit-generator, grouped-commits, cloud-infrastructure-architect, domain-specific-expert
   - `backbone/` (9) — tied to the Backbone/Rust framework: backbone-cli-master, backbone-schema-maintainer, framework-architect, custom-logic-specialist, database-migration-specialist, crate-maintainer, apps-maintainer, creative-domain-architect, modules-orchestrator
   - `community/` (21) — curated production engineering skills from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT). Covers API design, TDD/spec-driven, debugging, CI/CD, security hardening, planning, docs/ADRs, and more. The Backbone-specific code-review and testing guidance previously in `generic/` is folded into `code-review-and-quality` and `test-driven-development`. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-- **10 subagents**: code-reviewer, test-writer, refactorer, doc-writer, perf-analyzer, security-auditor, debugger, onboarding-explainer, technical-writer, business-flow. Three of them (code-reviewer, security-auditor, test-writer) are merged versions combining the original drafts with structure from `addyosmani/agent-skills`. `technical-writer` (full framework handbook; complements the lighter `doc-writer`) and `business-flow` (document + BDD-test feature flows) drive the `framework-handbook` and `business-flow-bdd` skills respectively.
+- **13 subagents**: code-reviewer, test-writer, refactorer, doc-writer, perf-analyzer, security-auditor, debugger, onboarding-explainer, technical-writer, business-flow, council-chair, council-skeptic, council-steelman. Three of them (code-reviewer, security-auditor, test-writer) are merged versions combining the original drafts with structure from `addyosmani/agent-skills`. `technical-writer` (full framework handbook; complements the lighter `doc-writer`) and `business-flow` (document + BDD-test feature flows) drive the `framework-handbook` and `business-flow-bdd` skills respectively. The three `council-*` agents are the isolated dissenting seats (Chair synthesizes, Skeptic hunts the load-bearing assumption, Steelman builds the strongest case first) that drive the `council` skill.
 
 All assets are embedded into the binary at compile time via `include_dir!`. Installation is a simple copy — no network, no registry.
 
