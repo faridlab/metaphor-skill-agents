@@ -5,6 +5,19 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3]
+
+### Added
+- **Ten council persona files** (`council/personas/`) — `dx-ergonomics`, `framework-author`,
+  `api-extensibility`, `versioning-discipline`, `ddd-bounded-context`, `contract-seat`,
+  `operational-realist`, `tester`, `ux`, and `devopssec`. These complete the persona registry: every
+  context seat and conditional guest that `composition.yaml` wires for the `cli`, `framework`, `module`,
+  and `service` repo types now ships as a file. Together with the `root`-context seats added in 0.3.2,
+  the council now seats *every* roster from shipped persona files instead of regenerating any seat from
+  the schema at run time. Each follows the genotype contract in `references/persona-schema.md`
+  (lineage / lens / primary_attack / summon / engagement). Catalog totals are unchanged at 38 skills and
+  13 subagents — these are seats within the existing `council` skill.
+
 ## [0.3.2]
 
 ### Added
