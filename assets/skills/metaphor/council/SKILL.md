@@ -93,6 +93,24 @@ its top recommendation: the residual negative value, reversibility, and the evid
 that would flip the decision. Cross-scope ideas the seats raised but that fall outside
 the focus (e.g. "spin up a new backbone-* for X") go in the parking lot, not lost.
 
+### Step 6 — Persist the result
+
+After the Chair's report is final, the orchestrator (not the read-only Chair subagent)
+writes it to disk so the decision survives the session and the team can read it:
+
+- **Location:** `docs/council/` at the invocation root. Create the directory if absent.
+- **Filename:** `<YYYY-MM-DD>-<repo-type>-<unit>-<focus>.md` (e.g.
+  `2026-06-28-service-bersihir-ops-ux-security-readiness.md`). Use the unit's directory
+  name for `<unit>`, or `root` when judging the whole workspace. Slugify (lowercase,
+  hyphens). If a file with that name already exists from a run the same day, append
+  `-2`, `-3`, … rather than overwriting — each run is its own record.
+- **Contents:** the Chair's report VERBATIM (the `references/output-contract.md` shape),
+  preceded by a one-line front-matter header recording the date, repo type, unit, focus
+  lens, and the roster that sat — so a later reader knows the conditions the call was made
+  under.
+- After writing, tell the user the path. The on-screen report and the file are identical;
+  the file is the durable copy, not a summary.
+
 ## Files
 
 - `composition.yaml` — context → roster rules and the focus-lens list. Edit this to add
