@@ -5,6 +5,23 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+### Added
+- **`council` skill** (`metaphor/`) — a context-aware, multi-persona architecture review board. Reads
+  `metaphor.toml` to resolve the repo type (cli/framework/module/service/root) and scope, then
+  auto-composes a roster (standing seats + context seats + conditionally invited guests) bounded to a
+  single focus lens. Runs the dissenting seats as isolated subagents and ends with the Chair's one
+  least-downside recommendation plus ranked alternatives — never a both-sides summary. Ships the
+  persona registry (`personas/*.yaml`), the roster rules (`composition.yaml`), the report contract and
+  persona schema (`references/`), and a `metaphor.toml.example`.
+- **`council-chair`, `council-skeptic`, `council-steelman` agents** — the council's isolated
+  dissenting seats: the Chair synthesizes findings into one owned call, the Skeptic hunts the
+  load-bearing assumption, the Steelman builds the strongest honest case before the critique. Derived
+  from the persona registry (genotype → phenotype).
+
+Catalog totals are now 38 skills and 13 subagents.
+
 ## [0.2.0]
 
 ### Added
