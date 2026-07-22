@@ -16,3 +16,5 @@
 .env
 .env.local
 .claude/
+# graphify knowledge graph (local, not committed)
+graphify-out/
