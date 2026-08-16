@@ -31,6 +31,7 @@ metaphor dev serve               # run the current app
 - **NEVER** edit `metaphor.lock` by hand — regenerate via `metaphor sync --update`.
 - **NEVER** copy files between apps — if they share code, promote to an upstream module instead.
 - **SHOULD** use `metaphor dev` / `metaphor test` / `metaphor build` over raw `cargo` / `gradle`.
+- **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
 
 ## Workspace shape
 

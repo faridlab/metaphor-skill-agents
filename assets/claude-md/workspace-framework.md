@@ -30,6 +30,7 @@ metaphor graph                   # dependency graph
 - **NEVER** hardcode project paths in scripts — read via `metaphor show projects --json`.
 - **SHOULD** use `--affected --base=main` in CI to only rebuild/retest what changed.
 - Commits: conventional commits; **no Claude signatures** in commit messages.
+- **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
 
 ## Project types in this workspace
 

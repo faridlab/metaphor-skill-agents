@@ -44,6 +44,7 @@ Inside a Metaphor workspace, `metaphor dev serve` / `metaphor dev test` may wrap
 - **NEVER** make blocking calls on the main thread — use `viewModelScope` + suspend functions.
 - **NEVER** bypass the sync engine for writes that need server reconciliation — queue them, don't fire-and-forget.
 - **NEVER** commit `local.properties`, Google service files, signing configs, or API keys.
+- **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
 
 ## Folder cheatsheet
 

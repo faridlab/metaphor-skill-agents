@@ -33,6 +33,7 @@ metaphor lint check                       # clippy + fmt + audit
 - **NEVER** hand-write SQL migrations when the module's schema YAML can regenerate them. Edit `schema/models/*.model.yaml` upstream instead.
 - **SHOULD** expose `/health`, `/readyz`, `/metrics` (Prometheus) and structured JSON logs.
 - **SHOULD** feature-gate optional transports (`grpc`, `graphql`) when the module supports them.
+- **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
 
 ## Folder cheatsheet
 
