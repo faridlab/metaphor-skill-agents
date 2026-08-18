@@ -5,6 +5,17 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4]
+
+### Changed
+- **`grouped-commits` skill now requires self-contained, timeless messages.** Commit messages must
+  decode on their own for a reader with no access to the planning context that produced them — no
+  sprint/wave/pass labels, internal spec IDs, meeting references, or scorekeeping counts. The
+  skill's description, message rules, and anti-patterns all carry the rule with good/bad examples,
+  and the manifest summary reflects it. Rationale: messages are read years later by engineers and
+  sessions that were not in the room; vocabulary defined only inside a planning document goes stale
+  the moment that document's window closes.
+
 ## [0.3.3]
 
 ### Added

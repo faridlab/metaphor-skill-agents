@@ -10,7 +10,7 @@ skills:
     - name: commit-generator
       summary: "Context-aware conventional commits, no signatures"
     - name: grouped-commits
-      summary: "Split changes into focused commits grouped by functionality; one-line why-focused messages, no signatures"
+      summary: "Split changes into focused commits grouped by functionality; one-line why-focused, self-contained messages — no signatures, no session/plan jargon"
     - name: cloud-infrastructure-architect
       summary: "Multi-cloud design, cost optimization, security best practices"
     - name: domain-specific-expert
