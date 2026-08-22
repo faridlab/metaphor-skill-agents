@@ -5,6 +5,22 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0]
+
+### Added
+- **`orchestrate-agents` skill** (`generic/`) — the multi-agent fleet pattern for large tasks: a
+  project-manager agent runs first (priority order across tracks, a GO/NO-GO gate per track,
+  guidance strings handed to the workers), the worker tracks then run as concurrent pipelines
+  (spec→implementation chains, live verification legs, read-only recons — gated tracks are skipped
+  by the script, not by judgment), and a steelman→skeptic→chair council closes the run against the
+  workers' actual reports. The skill carries the construction rules (structured output schemas on
+  every agent, gates as data, pipeline over barrier), the house-rules template every agent prompt
+  must embed (read the repo's CLAUDE.md first; workers never commit, tag, or push — the
+  orchestrator serializes review and keeps the user in the loop for anything outbound), and the
+  orchestration discipline for the main conversation (background launch, no polling,
+  journal inspection on suspicious results, never fabricating a pending agent's output). Catalog
+  totals are now 38 skills and 13 subagents (docs already carried 38; the on-disk count catches up).
+
 ## [0.3.4]
 
 ### Changed

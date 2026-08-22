@@ -15,6 +15,8 @@ skills:
       summary: "Multi-cloud design, cost optimization, security best practices"
     - name: domain-specific-expert
       summary: "Domain knowledge transfer and documentation"
+    - name: orchestrate-agents
+      summary: "Run a task as a multi-agent fleet: a PM agent sequences priority, worker tracks run as concurrent spec-to-implementation pipelines, and a steelman-skeptic-chair council closes it"
 
   metaphor:
     - name: metaphor-cli-master
