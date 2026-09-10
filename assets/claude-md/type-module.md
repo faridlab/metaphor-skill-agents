@@ -48,6 +48,7 @@ metaphor lint check
 - **NEVER** bypass `GenericCrudRepository` for simple CRUD — extend it via custom methods.
 - **NEVER** touch another module's schema YAML.
 - **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
+- **MUST** run the composing service's chaos gate when a module change lands in a composed service — business-flow-level changes only (new/changed flow, cross-module seam, new external dependency, tenancy/RLS/auth, runtime infra; criteria in the workspace's chaos doc, e.g. `docs/chaos/README.md`). A module has no runtime of its own; resilience is proven at the composition level. Typos, cosmetics, docs-only, tests-only, and behavior-identical refactors are exempt.
 
 ## Four-layer folder cheatsheet
 

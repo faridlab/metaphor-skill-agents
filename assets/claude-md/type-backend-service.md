@@ -34,6 +34,7 @@ metaphor lint check                       # clippy + fmt + audit
 - **SHOULD** expose `/health`, `/readyz`, `/metrics` (Prometheus) and structured JSON logs.
 - **SHOULD** feature-gate optional transports (`grpc`, `graphql`) when the module supports them.
 - **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
+- **MUST** run the workspace's chaos gate after business-flow-level changes here (new/changed flow, cross-module seam, new external dependency, tenancy/RLS/auth, runtime infra) — see the workspace's `docs/chaos/README.md` if it defines one. Typos, cosmetics, docs-only, tests-only, and behavior-identical refactors are exempt.
 
 ## Folder cheatsheet
 
@@ -82,8 +83,8 @@ Cargo.toml                 # deps: backbone-* crates + domain modules
 ## Deeper knowledge (load on demand)
 
 - Skill: `backbone-cli-master` — Backbone CLI surface + workflows.
-- Skill: `backbone-modules-orchestrator` — composing modules into a service.
-- Skill: `backbone-framework-architect` — framework crate layering.
+- Skill: `modules-orchestrator` — composing modules into a service.
+- Skill: `framework-architect` — framework crate layering.
 - Skill: `api-and-interface-design` — REST/gRPC/GraphQL surface shape.
 - Skill: `security-and-hardening` — authz, input validation, secret handling.
 
