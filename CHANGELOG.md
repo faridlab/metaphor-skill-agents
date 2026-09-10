@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0]
 
 ### Added
+- **`chaos-engineering` skill** (`metaphor/`) — the post-change chaos gate as a first-class
+  workflow: when the gate is mandatory vs exempt, the non-negotiable safety rules (dev stack
+  only, never while someone else is using the stack, volumes untouchable), running the kit
+  (`metaphor chaos` forwarder or `bash deployment/chaos/run.sh`; list → dry-run → targeted →
+  live, `--full` legs), reading PASS/FAIL/SKIP verdicts and committing runlogs as evidence,
+  wiring the product steady-state hook (`lib/steady-state.sh` — `flow_canary` / `tenancy_sweep`
+  as thin wrappers over committed probe scripts), and the experiment shape for extending the
+  catalog. Catalog totals are now 40 skills and 13 subagents (the README breakdown also catches
+  up with `orchestrate-agents`).
 - **`orchestrate-agents` skill** (`generic/`) — the multi-agent fleet pattern for large tasks: a
   project-manager agent runs first (priority order across tracks, a GO/NO-GO gate per track,
   guidance strings handed to the workers), the worker tracks then run as concurrent pipelines

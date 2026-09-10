@@ -27,6 +27,8 @@ skills:
       summary: "Document feature business flows and verify them with executable BDD/Gherkin acceptance specs"
     - name: council
       summary: "Context-aware multi-persona review board: adapts its roster to the repo (cli/framework/module/service/root) and synthesizes one least-downside recommendation"
+    - name: chaos-engineering
+      summary: "Run the post-change chaos gate on a workspace dev stack: fault experiments that prove steady state holds and recovery is clean; covers safety rules, verdicts, the steady-state hook and adding experiments"
 
   community:
     # Sourced from addyosmani/agent-skills (MIT). See THIRD_PARTY_NOTICES.md.
