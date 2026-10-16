@@ -829,7 +829,7 @@ spec:
         spec:
           containers:
           - name: rusty-api-gateway
-            image: ghcr.io/startapp-id/rusty-api-gateway:latest
+            image: ghcr.io/startapp-id/rusty-api-gateway:v1.0.0  # the release tag, never :latest
             ports:
             - containerPort: 3000
   placement:

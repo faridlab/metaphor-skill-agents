@@ -216,6 +216,14 @@ CMD ["./rusty"]
 ```
 
 #### Docker Compose Application Orchestration
+
+Pin every image to an exact version (production compose files also pin the digest,
+`image: name:1.2.3@sha256:…`); never use `:latest` or an untagged image. Use the maintained,
+open source servers: Valkey for the cache (Redis 7.4+ is not open source), RustFS for S3 object
+storage (MinIO no longer publishes images), Mailpit for dev email (MailHog is unmaintained),
+Grafana Alloy for log shipping (Promtail is end of life) and Node 24 LTS. `metaphor doctor`
+fails on the old images and on floating tags.
+
 ```yaml
 # docker-compose.yml
 
@@ -262,7 +270,7 @@ services:
       start_period: 60s
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16.15-alpine
     environment:
       - POSTGRES_DB=rusty_db
       - POSTGRES_USER=root
@@ -279,8 +287,8 @@ services:
       retries: 5
     restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
+  redis:  # role name; the server is Valkey, wire-compatible with REDIS_URL clients
+    image: valkey/valkey:9.0.6-alpine
     ports:
       - "6379:6379"
     volumes:
@@ -325,14 +333,14 @@ services:
       retries: 3
 
   smtp:
-    image: mailhog/mailhog
+    image: axllent/mailpit:v1.31.6
     ports:
       - "1025:1025"  # SMTP
       - "8025:8025"  # Web UI
     restart: unless-stopped
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.31.7-alpine
     ports:
       - "80:80"
       - "443:443"
@@ -786,7 +794,7 @@ spec:
     spec:
       containers:
       - name: rusty-api-gateway
-        image: rusty-api-gateway:latest
+        image: rusty-api-gateway:v1.0.0  # the release tag, never :latest
         ports:
         - containerPort: 3000
         env:

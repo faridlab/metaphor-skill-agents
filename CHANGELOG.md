@@ -5,6 +5,16 @@ All notable changes to `metaphor-skill-agents` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **`apps-maintainer`** teaches pinned, maintained images: Valkey 9.0 instead of Redis 7
+  (7.4+ is not open source), Mailpit instead of MailHog, Postgres 16, exact tags everywhere and
+  digests in production, and never `:latest`. It also names the replacements for MinIO, Promtail
+  and Node 20, which `metaphor doctor` now rejects. **`cloud-infrastructure-architect`** pins its
+  example deployment to a release tag instead of `:latest`. Projects pick this up with
+  `metaphor agent update apps-maintainer cloud-infrastructure-architect`.
+
 ## [0.4.0]
 
 ### Added
