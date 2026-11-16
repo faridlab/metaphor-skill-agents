@@ -1,6 +1,6 @@
 ---
 template: type-module
-description: DDD domain module with schema-YAML as source of truth, CUSTOM markers, GenericCrudService pattern.
+description: DDD domain module with schema-YAML as source of truth, ext.rs extension files for hand code, GenericCrudService pattern.
 ---
 
 # Metaphor Domain Module
@@ -15,9 +15,9 @@ A library crate (no `main.rs`) that owns one business domain (e.g. `accounting`,
 ## Golden path
 
 ```bash
-metaphor schema validate                 # check schema YAML
+metaphor schema schema validate                 # check schema YAML
 metaphor make entity <Name>              # scaffold from schema
-metaphor migration create <name>         # new migration
+metaphor migration generate <name>         # new migration
 metaphor dev test                        # run tests
 metaphor lint check
 ```
@@ -34,12 +34,12 @@ metaphor lint check
 - (optional) gRPC service + Protobuf
 - (optional) OpenAPI spec
 
-**Regeneration preserves only code inside `// <<< CUSTOM ... // END CUSTOM` blocks.** Everything outside those markers is overwritten.
+**Regeneration writes every generated file whole.** Hand code never goes in a generated file: it lives in a `<name>.ext.rs` extension file beside it (ADR-0031), and `metaphor schema doctor` fails on a generated file that differs from fresh output.
 
 ## Rules
 
-- **MUST** edit `schema/models/*.model.yaml` first for any entity change. Never hand-edit generated files outside CUSTOM markers.
-- **MUST** put custom logic inside `// <<< CUSTOM` / `// END CUSTOM` blocks, or in a sibling `*_custom.rs` file (e.g. `account_service_custom.rs`) which is never overwritten.
+- **MUST** edit `schema/models/*.model.yaml` first for any entity change. **NEVER** hand-edit a generated file.
+- **MUST** put hand code in extension files: `<name>.ext.rs` beside the generated file (extra `impl` blocks, an extension trait for a generated service, a validator's `extend`), `mod.ext.rs` for a directory's hand-written module declarations and re-exports, and `lib.ext.rs` for the module's own state, builder options and build steps. A wholly hand-written file (e.g. `account_service_custom.rs`) is listed under `user_owned` and declared in its directory's `mod.ext.rs`.
 - **MUST** define services as type aliases: `pub type AccountService = GenericCrudService<Account, CreateAccountDto, UpdateAccountDto, AccountRepository>`. Don't hand-roll `impl`.
 - **MUST** define repositories as thin newtypes: `pub struct AccountRepository(GenericCrudRepository<Account, PgPool>)`. Add custom methods only when `GenericCrudRepository` cannot express them.
 - **MUST** register every service in the `{Domain}Module` builder.
@@ -48,7 +48,6 @@ metaphor lint check
 - **NEVER** bypass `GenericCrudRepository` for simple CRUD — extend it via custom methods.
 - **NEVER** touch another module's schema YAML.
 - **MUST** read and follow the target repo's own `CLAUDE.md` when working across repos — before editing in another repo, read its rules; the more local `CLAUDE.md` always wins.
-- **MUST** run the composing service's chaos gate when a module change lands in a composed service — business-flow-level changes only (new/changed flow, cross-module seam, new external dependency, tenancy/RLS/auth, runtime infra; criteria in the workspace's chaos doc, e.g. `docs/chaos/README.md`). A module has no runtime of its own; resilience is proven at the composition level. Typos, cosmetics, docs-only, tests-only, and behavior-identical refactors are exempt.
 
 ## Four-layer folder cheatsheet
 
@@ -58,7 +57,7 @@ src/
 ├── module.rs                             # Module struct + builder
 ├── domain/
 │   ├── entity/
-│   │   ├── <entity>.rs                   # generated; customize via CUSTOM markers
+│   │   ├── <entity>.rs                   # generated; extend in <entity>.ext.rs
 │   │   └── mod.rs
 │   └── repositories/                     # trait definitions (ports)
 ├── application/
@@ -117,9 +116,9 @@ Cargo.toml                                # feature flags: events, grpc, openapi
 ## Common tasks
 
 - "Add a new entity `Vendor`" → add `schema/models/vendor.model.yaml` → `metaphor make entity vendor` → migration/entity/service/handler/route wired automatically → register `vendor_service` in `module.rs`.
-- "Add a custom business rule" → put it in `application/service/<entity>_service_custom.rs`, or inside `// <<< CUSTOM` markers in the generated service.
+- "Add a custom business rule" → put it in `application/service/<entity>_service_custom.rs` (declared in `mod.ext.rs`), or in `<entity>_service.ext.rs` beside the generated service.
 - "Add a non-CRUD endpoint" → add a handler fn in `presentation/http/`, register in `routes/mod.rs` (outside `BackboneCrudHandler` composition).
-- "Change a column" → edit schema YAML, `metaphor migration create <change>`, regenerate.
+- "Change a column" → edit schema YAML, `metaphor migration generate <change>`, regenerate.
 
 ## Key files to read before editing
 
@@ -140,11 +139,21 @@ Cargo.toml                                # feature flags: events, grpc, openapi
 
 ## Anti-patterns
 
-- Editing generated code outside CUSTOM markers (silently overwritten on next regen).
+- Editing a generated file at all (regeneration overwrites it, and `schema doctor` fails on it).
 - Adding `main.rs` / binary target to a module (wrong project type).
 - Hand-rolled axum CRUD routes (always use `BackboneCrudHandler`).
 - Skipping schema YAML and writing entity + migration + handler by hand (breaks regen).
 - Leaking one module's entity into another module's API.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
 <!-- rust-rules:start (one identical copy in every Rust repo; full text: metaphora docs/handbook/rust-rules.md) -->
 ## Rust rules (NS01 to NS12)

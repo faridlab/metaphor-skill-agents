@@ -23,7 +23,7 @@ metaphor dev serve               # run the current app
 - **MUST** run `metaphor sync` after pulling changes that touch `metaphor.yaml` or `metaphor.lock`.
 - **MUST** treat `modules/` as read-only upstream clones — **NEVER** edit inside `modules/*` (wiped on next sync). Fix upstream, re-pin, re-sync.
 - **MUST** pin refs in `metaphor.yaml`; check in `metaphor.lock`; **NEVER** hand-edit the lock — regenerate via `metaphor sync --update` and commit both together.
-- **MUST** declare every hand-written, non-schema-derived file under `apps/<app>/metaphor.codegen.yaml` → `user_owned:`, and wrap hand edits inside generator files in `// <<< CUSTOM … // END CUSTOM` markers. Unlisted/unmarked changes are silently wiped by `metaphor schema generate --force`.
+- **MUST** declare every hand-written, non-schema-derived file under `apps/<app>/metaphor.codegen.yaml` → `user_owned:`, and **NEVER** edit a generated file: hand code lives in a `<name>.ext.rs` extension file beside it (ADR-0031 in metaphora's handbook) — `mod.ext.rs` for a directory, `lib.ext.rs` for the module struct and builder. Modules on the extension layout carry no CUSTOM zones, regeneration writes generated files whole, and `metaphor schema doctor` fails on any generated file that differs from fresh output.
 - **NEVER** copy files between apps — promote shared code to an upstream module.
 - **MUST** declare every required runtime env var in the matching `.env.*.example` template (the example is the contract; stacks fail-fast on missing vars — no silent defaults).
 - **MUST** use `{$VAR}` parse-time placeholders for Caddy site addresses, never `{env.VAR}`.
